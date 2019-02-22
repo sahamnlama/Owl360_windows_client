@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+img-src    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+<head>
+    <!--
+    Customize this policy to fit your own app's needs. For more guidance, see:
+        https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+    Some notes:
+        * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+        * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+        * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+            * Enable inline JS: add 'unsafe-inline' to default-src
+    -->
+    <!--<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">-->
+   
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.css" rel="stylesheet">
+    <title>Hello World</title>
+</head>
+<body style="background-color: 	#484848">
+<div class="ui container">
+    <br>
+    <img class="ui mini centered circular image" src="img/owl360.png">
+    <h2 style="color: #FFFFFF"; class="ui center aligned header">
+        <!--<i class="circular users icon"></i>-->
+        360<sup>o</sup>Owl
+    </h2>
+    <div class="ui clearing divider"></div>
+    <div class="ui grid">
+        <div class="row">
+            
+            <select id="visitorDdl" onchange="visitorDdlChange(this);" class="ui dropdown six wide column">
+                    <option value="0">-- Select Visitor --</option>
+            </select>
+            
+        </div>
+        <br/>
+        <div class="row">
+            <div class="ui input">
+                <input id="visitorNameTxt" type="text"  placeholder="Visitor's name">&nbsp;&nbsp;&nbsp;
+                <button class="ui mini olive basic button" onclick="visitorNameChange();">Update</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <h3 id="folderHeader" class="six wide column" style="color: #FFFFFF";>Folder</h3>
+        </div>
+
+        <div class="row">
+
+            <div class="two wide column"></div>
+            <div class="four wide column">
+                <img id="visitorImage1" class="ui centered image">
+            </div>
+            <div class="four wide column">
+                <img id="visitorImage2" class="ui centered image">
+            </div>
+            <div class="four wide column">
+                <img id="visitorImage3"  class="ui centered image">
+            </div>
+            <div class="two wide column"></div>
+           
+        </div>
+       
+    </div>
+
+</div>
+<!-- Only needed if you want support for dropdown menus -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript" src="cordova.js"></script>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+<script>
+    var socket;
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+        console.log("window.open works well");
+        document.getElementById("folderHeader").style.visibility = "hidden";
+
+        //$(document).ready(function() {
+            socket = io('https://owl360signellingsvr.herokuapp.com');
+            //var socket = io('http://192.168.1.7:3332');
+
+            socket.emit("request_visitor_folder", "request_visitor_folder");
+
+            socket.on('visitor_folder_list', function(data){
+                try {
+                    //alert(data);
+                    var folderArr = data.split(",");
+                    var select = document.getElementById('visitorDdl');
+                    for (var i = 0; i < folderArr.length; i++) {
+                        var folder = folderArr[i].trim();
+                        var folderName = folder.replace(/'/g,"");
+                        //var folderName = folder.slice(1, folderArr[i].length-1);
+                        var option = document.createElement('option');
+                        option.text = folderName;
+                        option.value = i+1;
+                        select.add(option, i+1);
+                        //alert(folderName);
+                    }
+                }
+                catch(err){
+                    alert(err);
+                }
+            });
+
+            socket.on('visitor_image1', function(image){
+                var img1 = document.getElementById('visitorImage1');
+                img1.src = image;
+            });
+            socket.on('visitor_image2', function(image){
+                var img2 = document.getElementById('visitorImage2');
+                img2.src = image;
+            });
+            socket.on('visitor_image3', function(image){
+                var img3 = document.getElementById('visitorImage3');
+                img3.src = image;
+            });       
+
+            socket.on('ack_update_visitor_folder', function(data){
+                if(data == 1){
+                    alert('Successfully updated');
+                    location.reload();
+                }
+            });          
+
+
+            socket.on('send_visitor_pushnotification', function(data){
+                //alert(data);
+                cordova.plugins.notification.local.schedule({
+                    title: "Visitor's arrival",
+                    text: data//,
+                    //foreground: true
+                });
+            });    
+
+
+            socket.on('visitor_call_start_pushnotification', function(data){
+                alert(data);
+                if(data == 1){
+                    cordova.InAppBrowser.open('https://owl360videochatsvr.herokuapp.com/#'+Date.now()+"-"+"aaa", '_system', 'location=yes');
+                }
+            });    
+            
+
+            /*socket.on('stream', function(image){
+                var img = document.getElementById("play");
+                img.src = image;
+            });*/
+
+            /*$("#streamCloseBtn").click(function(){
+        
+                alert("sadsad");
+            });*/
+        //});
+    }
+
+    function visitorDdlChange(control){
+        try{
+            document.getElementById('visitorImage1').src = "";
+            document.getElementById('visitorImage2').src = "";
+            document.getElementById('visitorImage3').src = "";
+            //alert(control.options[control.selectedIndex].text);
+            //var x = document.getElementById("visitorDdl").innerHTML;
+            var selectedFolder = control.options[control.selectedIndex].text;
+            var selecttedValue = control.value;
+
+            if(selecttedValue == 0){
+                document.getElementById("folderHeader").style.visibility = "hidden";
+            }
+            else{
+                socket = io('https://owl360signellingsvr.herokuapp.com');
+                document.getElementById("folderHeader").style.visibility = "visible";
+                socket.emit("request_visitor_images", selectedFolder);
+                alert();
+            }            
+            document.getElementById("folderHeader").innerHTML = selectedFolder + " Folder";
+        }
+        catch(err){
+            alert(arr);
+        }
+    }
+
+
+    function visitorNameChange(){
+        try{
+            var e = document.getElementById("visitorDdl");
+            var selectFolder = e.options[e.selectedIndex].text;
+
+            var visitorName = document.getElementById('visitorNameTxt').value;
+
+            
+            socket.emit("update_visitor_folder", selectFolder +","+visitorName);
+            alert(selectFolder +","+visitorName);
+        }
+        catch(err){
+            alert(err);
+        }
+    }
+
+
+</script>
+</body>
+</html>

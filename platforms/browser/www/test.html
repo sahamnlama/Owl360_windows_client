@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+        <title>Blank App</title>
+    </head>
+    <body>
+        <script>
+            document.addEventListener("deviceready", ondeviceready, false);
+            function ondeviceready(){
+                alert("Device ready");
+
+                cordova.plugins.notification.local.schedule({
+                    title: 'My first notification',
+                    text: 'Thats pretty easy...',
+                    foreground: true
+                });
+
+                setTimeout(function(){
+                   // alert();
+                   var ref = window.open(encodeURI("https://owl360videochatsvr.herokuapp.com"), '_system', 'location=yes');
+                },5000)
+
+               
+            }
+        </script>
+        <script type="text/javascript" src="cordova.js"></script>
+    </body>
+</html>

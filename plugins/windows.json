@@ -1,0 +1,28 @@
+{
+  "prepare_queue": {
+    "installed": [],
+    "uninstalled": []
+  },
+  "config_munge": {
+    "files": {}
+  },
+  "installed_plugins": {
+    "cordova-plugin-inappbrowser": {
+      "PACKAGE_NAME": "Owl360Client"
+    },
+    "cordova-plugin-local-notification": {
+      "PACKAGE_NAME": "Owl360Client"
+    },
+    "cordova-plugin-whitelist": {
+      "PACKAGE_NAME": "Owl360Client"
+    }
+  },
+  "dependent_plugins": {
+    "cordova-plugin-badge": {
+      "PACKAGE_NAME": "Owl360Client"
+    },
+    "cordova-plugin-device": {
+      "PACKAGE_NAME": "Owl360Client"
+    }
+  }
+}

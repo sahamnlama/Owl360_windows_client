@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <!--<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">-->
+        <meta name="format-detection" content="telephone=no">
+        <meta name="msapplication-tap-highlight" content="no">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.css" rel="stylesheet">
+        <title>Hello World</title>
+    </head>
+    <body style="background-color: 	#484848">
+    <div class="ui container">
+        <br>
+        <img class="ui tiny centered circular image" src="img/owl360.png">
+        <h2 style="color: #FFFFFF"; class="ui center aligned header">
+            <!--<i class="circular users icon"></i>-->
+            360<sup>o</sup>Owl
+        </h2>
+        <div class="ui clearing divider"></div>
+        <div class="ui grid">
+            <div class="row">
+                <div class="two wide column"></div>
+                <div class="twelve wide column">
+                    <button id="streamBtn" onclick="callAnothePage()" class="ui fluid huge basic animated olive button">
+                        <span class="visible content">Live Stream</span>
+                        <span class="hidden content"><i class="film icon"></i></span>
+                    </button>
+                </div>
+                <div class="two wide column"></div>
+            </div>
+            <div class="row">
+
+                <div class="two wide column"></div>
+                <div class="twelve wide column">
+                    <button id="tabVisitorBtn" onclick="tagVisitor()" class="ui fluid huge basic olive button">
+                        <i class="user outline icon"></i>Tag Visitor
+                    </button>
+                </div>
+                <div class="two wide column"></div>
+            </div>
+
+            <div class="row">
+                <div class="two wide column"></div>
+                <div class="twelve wide column">
+                    <button id="videoCall" onclick="videoCall()"  class="ui fluid huge basic olive button">
+                        <i class="film icon"></i>Video Call
+                    </button>
+                </div>
+                <div class="two wide column"></div>
+            </div>
+
+
+
+            <div class="row">
+                <div class="two wide column"></div>
+                <div class="twelve wide column">
+                    <button id="test" onclick="predefinedMessage()"  class="ui fluid huge basic olive button">
+                        <i class="film icon"></i>Predefined Messages
+                    </button>
+                </div>
+                <div class="two wide column"></div>
+            </div>
+
+        </div>
+    </div>
+    <!-- Only needed if you want support for dropdown menus -->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+
+    <script>
+        
+
+        var socket;
+        document.addEventListener("deviceready", onDeviceReady, false);
+        function onDeviceReady() {
+            alert(device.platform);
+            /*cordova.plugins.notification.local.schedule({
+                title: 'My first notification',
+                text: 'Thats pretty easy...',
+                foreground: true
+            });*/
+
+            //console.log("window.open works well");
+            socket = io('https://owl360signellingsvr.herokuapp.com');
+
+            //alert();
+
+            socket.on('send_visitor_pushnotification', function(data){
+                //alset(data);
+                if(device.platform == 'Android'){
+                    cordova.plugins.notification.local.schedule({
+                        title: "Visitor's arrival",
+                        text: data
+                        //foreground: true
+                    });
+                }
+            });  
+
+            socket.on('visitor_call_start_pushnotification', function(data){
+                //alert(data);
+                cordova.plugins.notification.local.schedule({
+                    title: 'Owl360 Call Nortification',
+                    text: 'Visitor is at doorstep and Answer call?',
+                    //attachments:['file://img/logo1.png'],
+                    actions: [
+                        { id: 'yes', title: 'Yes' },
+                        { id: 'no',  title: 'No' }
+                    ]
+                });
+
+
+                if(data == 1){
+                    //
+                }
+            });   
+
+            cordova.plugins.notification.local.on('yes', function (notification, eopts)
+             { 
+                socket.emit("open_call_picamera", "open_call_picamera");
+                var ret = cordova.InAppBrowser.open(encodeURI('https://owl360videochatsvr.herokuapp.com'), '_system', 'location=no');
+                //alert(ret);
+                
+             });
+            /*
+            $(document).ready(function() {
+                $('#streamBtn').click(function () {
+                    alert();
+                   window.location = 'stream.html';
+                });
+
+                /*$('#videoCall').click(function(){
+                    window.location = 'videoChat.html';
+                })
+            });*/
+            
+        }
+
+          function callAnothePage()
+                 {
+                    window.location = "stream.html";
+                 }
+
+        
+        function videoCall()
+                 {
+                    var ref2 = cordova.InAppBrowser.open(encodeURI("https://owl360videochatsvr.herokuapp.com"), '_system', 'location=no');
+                 }
+
+        function tagVisitor(){
+            window.location = "tag_visitor.html";
+        }
+
+        function predefinedMessage(){
+            window.location = "predifined_msg.html";
+        }
+        
+        //function predefinedMessage(){
+        //    window.location = "predefinedMessage.html";
+        //}
+
+    </script>
+    </body>
+</html>

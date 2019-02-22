@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+img-src    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+<head>
+    <!--
+    Customize this policy to fit your own app's needs. For more guidance, see:
+        https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+    Some notes:
+        * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+        * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+        * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+            * Enable inline JS: add 'unsafe-inline' to default-src
+    -->
+    <!--<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">-->
+   
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.css" rel="stylesheet">
+    <title>Hello World</title>
+</head>
+<body style="background-color: 	#484848">
+<div class="ui container">
+    <br>
+    <img class="ui mini centered circular image" src="img/owl360.png">
+    <h2 style="color: #FFFFFF"; class="ui center aligned header">
+        <!--<i class="circular users icon"></i>-->
+        360<sup>o</sup>Owl
+    </h2>
+    <div class="ui clearing divider"></div>
+    <div class="ui grid">
+        <div class="row">
+            <div class="wide column">
+                <img id="play" class="ui fluid image">
+                <div id="logger"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="four wide column"></div>
+            <div class="eight wide column">
+                <button id="streamCloseBtn"  onclick="streamClose()"  class="ui fluid huge basic animated olive button">
+                    <span class="visible content">Close</span>
+                    <span class="hidden content"><i class="close icon"></i></span>
+                </button>
+            </div>
+            <div class="four wide column"></div>
+        </div>
+    </div>
+
+</div>
+<!-- Only needed if you want support for dropdown menus -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript" src="cordova.js"></script>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+<script>
+    var socket;
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+        console.log("window.open works well");
+
+
+        //$(document).ready(function() {
+            socket = io('https://owl360signellingsvr.herokuapp.com');
+            //var socket = io('http://192.168.1.7:3332');
+
+            socket.emit("start_stream", "start_stream");
+
+            socket.on('stream', function(image){
+                var img = document.getElementById("play");
+                img.src = image;
+            });
+
+
+            socket.on('send_visitor_pushnotification', function(data){
+                cordova.plugins.notification.local.schedule({
+                    title: "Visitor's arrival",
+                    text: data//,
+                    //foreground: true
+                });
+            });   
+            /*$("#streamCloseBtn").click(function(){
+        
+                alert("sadsad");
+            });*/
+        //});
+    }
+
+    function streamClose(){
+        socket.emit("close_stream", "close_stream");
+
+        setTimeout(function(){ window.location = "index.html"; }, 1000);
+    }
+</script>
+</body>
+</html>
